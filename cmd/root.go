@@ -7,11 +7,12 @@ import (
 
 var port int
 var domain string
-var server bool = false
+var server bool = true
 
 var rootCmd = &cobra.Command{
 	Use:   "Chater",
 	Short: "This is a sample Chat application",
+	SilenceUsage: true,
 }
 
 var serverCmd = &cobra.Command{
@@ -21,6 +22,7 @@ var serverCmd = &cobra.Command{
 		fmt.Printf("Running in server mode on port %d and domain %s\n", port, domain)
 		server = true
 	},
+	SilenceUsage: true,
 }
 
 var clientCmd = &cobra.Command{
@@ -30,6 +32,7 @@ var clientCmd = &cobra.Command{
 		fmt.Printf("Running in client mode on port %d and domain %s\n", port, domain)
 		server = false
 	},
+	SilenceUsage: true,
 }
 
 func init() {

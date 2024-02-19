@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/lmortezal/ChatOnline/cmd"
+	s "github.com/lmortezal/ChatOnline/server"
 )
 
 func main() {
-  fmt.Println(cmd.Execute())
+	domain, port, server := cmd.Execute()
+	if server {
+		s.Startlistening(domain, port)
+	}
 }
