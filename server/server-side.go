@@ -10,6 +10,7 @@ var (
 	messages = make(chan string)
 	clients = make(map[Client]bool)
 )
+
 type Client struct {
 	Conn net.Conn
 	Name string
@@ -59,7 +60,7 @@ func Startlistening(domain string, port int) {
 func Boradcast(){
 		for msg := range messages {
 			for cli := range clients {
-				fmt.Fprint(cli.Conn , msg + "\n")
+				fmt.Fprint(cli.Conn , msg)
 			}
 		}
 }
@@ -73,9 +74,30 @@ func handleRequest(conn net.Conn) {
 	
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
-
+	var name string
+	
 	for {
 		// Read the incoming connection into the buffer.
+		if clients[Client{conn, ""}]{
+			fmt.Println("New client")
+			_, err := conn.Read(buf)
+			if err != nil {
+				log.Println("Error reading:", err.Error())
+				break
+			}
+			
+			name = string(buf[:])
+			fmt.Printf("Name received: %s", name)
+			for cli := range clients {
+				if cli.Conn == conn{
+					cli.Name = name
+				}
+			}
+			clients[Client{conn, ""}] = false
+			continue
+		}
+
+
 		reqLen, err := conn.Read(buf)
 		if err != nil {
 			log.Println("Error reading:", err.Error())
@@ -84,7 +106,8 @@ func handleRequest(conn net.Conn) {
 		// Convert the buffer to a string and print it.
 		reqStr := string(buf[:reqLen])
 		messages <- reqStr
-		//fmt.Println("Received from client:", reqStr)
+		fmt.Println(&messages)
+		fmt.Println("Received from ", name, ":", reqStr)
 		// Send the received string back to the client.
 		//conn.Write([]byte("Message received: " + reqStr))
 	}
