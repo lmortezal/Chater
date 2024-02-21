@@ -10,7 +10,14 @@ import (
 var (
 	messages = make(chan string)
 	clients = make(map[Client]bool)
+	// messages2 = make(chan allmessages)
 )
+
+// TODO  // create a struct for the messages to filter dublicate message
+// type allmessages struct {
+// 	Conn net.Conn
+// 	Message string
+// }
 
 type Client struct {
 	Conn net.Conn
@@ -58,6 +65,8 @@ func Startlistening(domain string, port int) {
 
 }
 
+
+// just Boradcast the message to all clients
 func Boradcast(){
 		for msg := range messages {
 			for cli := range clients {
@@ -68,8 +77,6 @@ func Boradcast(){
 
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
-	// print data in conn ( data is a buffer) 
-	// print human readable data
 	input := bufio.NewScanner(conn)
 	fmt.Println("New connection from:", conn.RemoteAddr())
 	var name string
@@ -80,34 +87,14 @@ func handleRequest(conn net.Conn) {
 	
 	cli := Client{conn, name}
 	clients[cli] = true
-	// Make a buffer to hold incoming data.
-	// buf := make([]byte, 1024)
-	// for input.Scan(){
-	// 	// Read the incoming connection into the buffer.
-	// 	if clients[Client{conn, ""}]{
-	// 		fmt.Println("New client")
-	// 		// _, err := conn.Read(buf)
-	// 		// if err != nil {
-	// 		// 	log.Println("Error reading:", err.Error())
-	// 		// 	break
-	// 		// }
-	// 		fmt.Printf("Name received: %s", input.Text())
-	// 		for cli := range clients {
-	// 			if cli.Conn == conn{
-	// 				cli.Name = input.Text()
-	// 			}
-	// 		}
-	// 		clients[Client{conn, ""}] = false
-	// 		continue
-	// 	}
-	// }	
+
 
 
 	for input.Scan(){
-		// Convert the buffer to a string and print it.
-		messages <- input.Text()
+		if input.Text() == ""{
+			continue
+		}
+		messages <- name + " say : " + input.Text()
 		fmt.Println("Received from ", name, ":", input.Text())
-		// Send the received string back to the client.
-		//conn.Write([]byte("Message received: " + reqStr))
 	}
 }
