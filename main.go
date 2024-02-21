@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/lmortezal/ChatOnline/cmd"
-	s "github.com/lmortezal/ChatOnline/server"
-	"github.com/lmortezal/ChatOnline/client"
+	"github.com/lmortezal/Chater/cmd"
+	s "github.com/lmortezal/Chater/server"
+	"github.com/lmortezal/Chater/client"
 )
 
 func main() {

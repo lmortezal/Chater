@@ -1,4 +1,4 @@
-module github.com/lmortezal/ChatOnline
+module github.com/lmortezal/Chater
 
 go 1.22.0
 
