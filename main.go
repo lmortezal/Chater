@@ -12,5 +12,7 @@ func main() {
 		s.Startlistening(domain, port)
 	} else if !server{
 		client.Startconnection(domain, port)
+	} else{
+		panic("Error")
 	}
 }
