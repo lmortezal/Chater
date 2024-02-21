@@ -1,8 +1,10 @@
 package client
 
 import (
+	"bufio"
 	"fmt"
 	"net"
+	"os"
 )
 
 var (
@@ -31,33 +33,21 @@ func Startconnection(domain string , port int){
 	}
 	fmt.Printf("connecting to %v\nEnter your name:\n" , addr)
 	fmt.Scan(&Name)
-	fmt.Fprintf(conn, Name + "\n")
+	fmt.Fprintf(conn, Name)
 	
-	go printlisten(conn)
-
-
-	for {
-		if err != nil {
-			// handle error
-			fmt.Println("Error:", err.Error())
+	go func() {
+		input := bufio.NewScanner(conn)
+		for input.Scan(){
+			fmt.Println(input.Text())
 		}
-		fmt.Scan(&msg)
-		fmt.Fprintf(conn, msg)
+	}()
+
+	terminal := bufio.NewScanner(os.Stdin)
+	fmt.Println("Enter your message:")
+	for terminal.Scan(){
+		msg = terminal.Text()
+		fmt.Fprintf(conn, msg + "\n")
 	}
-	
-	
-	
 	
 }
 	
-func printlisten(conn net.Conn){
-	for {
-		buf := make([]byte, 1024)
-		_, err := conn.Read(buf)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		fmt.Println(string(buf))
-	}
-}
