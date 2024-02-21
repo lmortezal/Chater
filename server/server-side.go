@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -49,7 +50,7 @@ func Startlistening(domain string, port int) {
 			log.Fatal(err)
 		}
 		// Handle connections in a new goroutine.
-		clients[Client{conn, ""}] = true
+		// clients[Client{conn, ""}] = true // this is a bug
 		go handleRequest(conn)
 
 	}
@@ -60,7 +61,7 @@ func Startlistening(domain string, port int) {
 func Boradcast(){
 		for msg := range messages {
 			for cli := range clients {
-				fmt.Fprint(cli.Conn , msg)
+				fmt.Fprint(cli.Conn , msg + "\n")
 			}
 		}
 }
@@ -69,45 +70,43 @@ func Boradcast(){
 func handleRequest(conn net.Conn) {
 	// print data in conn ( data is a buffer) 
 	// print human readable data
-
+	input := bufio.NewScanner(conn)
 	fmt.Println("New connection from:", conn.RemoteAddr())
-	
-	// Make a buffer to hold incoming data.
-	buf := make([]byte, 1024)
 	var name string
+	for input.Scan(){
+		name = input.Text()
+		break
+	}
 	
-	for {
-		// Read the incoming connection into the buffer.
-		if clients[Client{conn, ""}]{
-			fmt.Println("New client")
-			_, err := conn.Read(buf)
-			if err != nil {
-				log.Println("Error reading:", err.Error())
-				break
-			}
-			
-			name = string(buf[:])
-			fmt.Printf("Name received: %s", name)
-			for cli := range clients {
-				if cli.Conn == conn{
-					cli.Name = name
-				}
-			}
-			clients[Client{conn, ""}] = false
-			continue
-		}
+	cli := Client{conn, name}
+	clients[cli] = true
+	// Make a buffer to hold incoming data.
+	// buf := make([]byte, 1024)
+	// for input.Scan(){
+	// 	// Read the incoming connection into the buffer.
+	// 	if clients[Client{conn, ""}]{
+	// 		fmt.Println("New client")
+	// 		// _, err := conn.Read(buf)
+	// 		// if err != nil {
+	// 		// 	log.Println("Error reading:", err.Error())
+	// 		// 	break
+	// 		// }
+	// 		fmt.Printf("Name received: %s", input.Text())
+	// 		for cli := range clients {
+	// 			if cli.Conn == conn{
+	// 				cli.Name = input.Text()
+	// 			}
+	// 		}
+	// 		clients[Client{conn, ""}] = false
+	// 		continue
+	// 	}
+	// }	
 
 
-		reqLen, err := conn.Read(buf)
-		if err != nil {
-			log.Println("Error reading:", err.Error())
-			break
-		}
+	for input.Scan(){
 		// Convert the buffer to a string and print it.
-		reqStr := string(buf[:reqLen])
-		messages <- reqStr
-		fmt.Println(&messages)
-		fmt.Println("Received from ", name, ":", reqStr)
+		messages <- input.Text()
+		fmt.Println("Received from ", name, ":", input.Text())
 		// Send the received string back to the client.
 		//conn.Write([]byte("Message received: " + reqStr))
 	}
