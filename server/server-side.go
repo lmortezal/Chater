@@ -35,7 +35,10 @@ func Startlistening(domain string, port int) {
 		port = 8080
 	}
 	port_tls := port + 1
-	cert , err  := tls.LoadX509KeyPair("server.crt", "server.key")
+	cert , errFile_cert := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
+	if errFile_cert != nil{
+		fmt.Println(errFile_cert.Error())
+	}
 	config_tls := tls.Config{Certificates: []tls.Certificate{cert}}
 
 	var addr = fmt.Sprintf("%s:%d", domain, port)
@@ -65,15 +68,16 @@ func Startlistening(domain string, port int) {
 
 	for {
 		// Listen for an incoming connection.
-		// conn, err := l.Accept()
+		//conn, err := l.Accept()
 		conn_tld, err2 := l_tld.Accept()
-		if (err2 != nil) && (err != nil){
+		if (err2 != nil) || (err != nil){
 			log.Fatal(err2)
+			log.Fatal(err)
 		}
 		fmt.Println(conn_tld)
 		// Handle connections in a new goroutine.
 		// clients[Client{conn, ""}] = true // this is a bug
-		// go handleRequest(conn)
+		//go handleRequest(conn)
 		go handleRequestTls(conn_tld)
 		
 
