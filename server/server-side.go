@@ -93,13 +93,19 @@ func handleRequest(conn net.Conn) {
 	var name string
 	for input.Scan(){
 		name = input.Text()
+		messages <- name + " has joined"
 		break
 	}
 	
 	cli := Client{conn, name}
 	clients[cli] = true
 
-
+	defer func() {
+		delete(clients, cli)
+		messages <- name + " has left"
+		conn.Close()
+	
+	}()
 
 	for input.Scan(){
 		if input.Text() == ""{

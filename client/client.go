@@ -25,15 +25,17 @@ func Startconnection(domain string , port int){
 		return
 	}
 	fmt.Printf("connecting to %v\nEnter your name:\n" , addr)
-	fmt.Scan(&Name)
-	fmt.Fprintf(conn_tls, Name)
-	
 	go func() {
 		input := bufio.NewScanner(conn_tls)
 		for input.Scan(){
 			fmt.Println(input.Text())
 		}
 	}()
+
+	
+	fmt.Scan(&Name)
+	fmt.Fprintf(conn_tls, Name)
+	
 
 	terminal := bufio.NewScanner(os.Stdin)
 	fmt.Println("Enter your message:")
