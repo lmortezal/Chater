@@ -34,11 +34,14 @@ func Startlistening(domain string, port int) {
 	if port == 0 {
 		port = 8080
 	}
+	port_tls := port + 1
+	cert , err  := tls.LoadX509KeyPair("server.crt", "server.key")
+	config_tls := tls.Config{Certificates: []tls.Certificate{cert}}
 
-	
 	var addr = fmt.Sprintf("%s:%d", domain, port)
+	var addr_tls = fmt.Sprintf("%s:%d", domain, port_tls)
 	l, err := net.Listen("tcp4", addr)
-	l_tld , err2 := tls.Listen("tcp4", addr, )
+	l_tld , err2 := tls.Listen("tcp4", addr_tls, &config_tls)
 
 	if err2 != nil {
 		log.Fatal(err2)
@@ -49,7 +52,7 @@ func Startlistening(domain string, port int) {
 	if err != nil {
 		log.Fatal(err)
 	} else{
-		fmt.Println("Listening on ", addr)
+		fmt.Println("Listening on ", addr_tls)
 	}
 	// Close the listener when the application closes. and handle the error 
 	// each client send to server give it and print in the server and return to the client
@@ -62,19 +65,16 @@ func Startlistening(domain string, port int) {
 
 	for {
 		// Listen for an incoming connection.
-		conn, err := l.Accept()
+		// conn, err := l.Accept()
 		conn_tld, err2 := l_tld.Accept()
 		if (err2 != nil) && (err != nil){
 			log.Fatal(err2)
 		}
-
+		fmt.Println(conn_tld)
 		// Handle connections in a new goroutine.
 		// clients[Client{conn, ""}] = true // this is a bug
-		if conn != nil {
-			go handleRequest(conn)
-		}else {
-			go handleRequestTls(conn_tld)
-		}
+		// go handleRequest(conn)
+		go handleRequestTls(conn_tld)
 		
 
 	}
@@ -110,7 +110,7 @@ func handleRequestTls(conn net.Conn){
 		messages <- name + " say : " + input.Text()
 		fmt.Println("Received from ", name, ":", input.Text())
 	}
-	
+
 
 }
 // Handles incoming requests.
