@@ -3,8 +3,9 @@ package client
 import (
 	"bufio"
 	"fmt"
-	"net"
+	// "net"
 	"os"
+	"crypto/tls"
 )
 
 var (
@@ -25,18 +26,19 @@ func Startconnection(domain string , port int){
 	// 	fmt.Println()
 	// 	fmt.Print("\033[H\033[2J")
 	// }
-		
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		fmt.Println("Error:", err.Error())
+	conn_tls, err2 := tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true} )
+	//conn, err := net.Dial("tcp", addr)
+
+	if err2 != nil {
+		fmt.Println("Error:", err2.Error())
 		return
 	}
 	fmt.Printf("connecting to %v\nEnter your name:\n" , addr)
 	fmt.Scan(&Name)
-	fmt.Fprintf(conn, Name)
+	fmt.Fprintf(conn_tls, Name)
 	
 	go func() {
-		input := bufio.NewScanner(conn)
+		input := bufio.NewScanner(conn_tls)
 		for input.Scan(){
 			fmt.Println(input.Text())
 		}
@@ -46,7 +48,7 @@ func Startconnection(domain string , port int){
 	fmt.Println("Enter your message:")
 	for terminal.Scan(){
 		msg = terminal.Text()
-		fmt.Fprintf(conn, msg + "\n")
+		fmt.Fprintf(conn_tls, msg + "\n")
 	}
 	
 }
