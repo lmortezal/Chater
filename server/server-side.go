@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"crypto/tls"
 )
 
 var (
@@ -33,10 +34,17 @@ func Startlistening(domain string, port int) {
 	if port == 0 {
 		port = 8080
 	}
+
 	
 	var addr = fmt.Sprintf("%s:%d", domain, port)
 	l, err := net.Listen("tcp4", addr)
-	
+	l_tld , err2 := tls.Listen("tcp4", addr, )
+
+	if err2 != nil {
+		log.Fatal(err2)
+	} else{
+		fmt.Println("Listening on ", addr)
+	}
 
 	if err != nil {
 		log.Fatal(err)
@@ -46,6 +54,8 @@ func Startlistening(domain string, port int) {
 	// Close the listener when the application closes. and handle the error 
 	// each client send to server give it and print in the server and return to the client
 	defer l.Close()
+	defer l_tld.Close()
+
 
 
 	go Boradcast()
@@ -53,12 +63,19 @@ func Startlistening(domain string, port int) {
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
-		if err != nil {
-			log.Fatal(err)
+		conn_tld, err2 := l_tld.Accept()
+		if (err2 != nil) && (err != nil){
+			log.Fatal(err2)
 		}
+
 		// Handle connections in a new goroutine.
 		// clients[Client{conn, ""}] = true // this is a bug
-		go handleRequest(conn)
+		if conn != nil {
+			go handleRequest(conn)
+		}else {
+			go handleRequestTls(conn_tld)
+		}
+		
 
 	}
 
@@ -74,7 +91,28 @@ func Boradcast(){
 			}
 		}
 }
+func handleRequestTls(conn net.Conn){
+	input := bufio.NewScanner(conn)
+	fmt.Println("New connection from:", conn.RemoteAddr())
+	var name string
+	for input.Scan(){
+		name = input.Text()
+		break
+	}
+	
+	cli := Client{conn, name}
+	clients[cli] = true
 
+	for input.Scan(){
+		if input.Text() == ""{
+			continue
+		}
+		messages <- name + " say : " + input.Text()
+		fmt.Println("Received from ", name, ":", input.Text())
+	}
+	
+
+}
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
 	input := bufio.NewScanner(conn)
