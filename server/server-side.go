@@ -111,7 +111,7 @@ func handleRequest(conn net.Conn) {
 		if input.Text() == ""{
 			continue
 		}
-		messages <- name + " say : " + input.Text()
+		messages <- name + ":" + input.Text()
 		fmt.Println("Received from ", name, ":", input.Text())
 	}
 }

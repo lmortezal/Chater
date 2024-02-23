@@ -5,14 +5,20 @@ import (
 	"fmt"
 	"os"
 	"crypto/tls"
+	"strings"
 )
 
 var (
 	msg string  
 	Name string
 )
+type ServerMsg struct {
+    Name    string
+    Message string
+}
 
-func Startconnection(domain string , port int){
+
+func Startconnection(domain string , port int, messages chan<-  ServerMsg){
 
 	// connect to this socket
 	var addr = fmt.Sprintf("%s:%d", domain, port)
@@ -28,6 +34,9 @@ func Startconnection(domain string , port int){
 	go func() {
 		input := bufio.NewScanner(conn_tls)
 		for input.Scan(){
+			name1 := strings.Split(input.Text(), ":")[0]
+			msg1 := strings.Split(input.Text(), ":")[1]
+			messages <- ServerMsg{Name: name1, Message: msg1}
 			fmt.Println(input.Text())
 		}
 	}()
