@@ -18,15 +18,11 @@ type model struct{
 	ReciveStyle lipgloss.Style
 	err error
 }
-type ServerMsg struct {
-    Name    string
-    Message string
-}
 
 type errMsg error
 
 func Tui_main(){
-	Messages := make(chan ServerMsg)
+	Messages := make(chan<- client.ServerMsg)
 	
 	client.Startconnection("localhost", 8080, Messages)
 
@@ -96,7 +92,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Reset()
 			m.viewport.GotoBottom()
 		}
-	case ServerMsg:
+	case client.ServerMsg:
         // Format the server message and add it to the messages
         serverMessage := m.ReciveStyle.Render(msg.Name + ": ") + msg.Message
         m.messages = append(m.messages, serverMessage)

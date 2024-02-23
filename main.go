@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	tui "github.com/lmortezal/Chater/Tui"
 	"github.com/lmortezal/Chater/client"
 	"github.com/lmortezal/Chater/cmd"
@@ -11,12 +9,11 @@ import (
 
 func main() {
 	tui.Tui_main()
-	time.Sleep(1000 * time.Second)
 	domain, port, server := cmd.Execute()
 	if server {
 		s.Startlistening(domain, port)
 	} else if !server{
-		client.Startconnection(domain, port)
+		client.Startconnection(domain, port , nil)
 	} else{
 		panic("Error")
 	}

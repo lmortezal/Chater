@@ -34,9 +34,7 @@ func Startconnection(domain string , port int, messages chan<-  ServerMsg){
 	go func() {
 		input := bufio.NewScanner(conn_tls)
 		for input.Scan(){
-			name1 := strings.Split(input.Text(), ":")[0]
-			msg1 := strings.Split(input.Text(), ":")[1]
-			messages <- ServerMsg{Name: name1, Message: msg1}
+			messages <- ServerMsg{Name: strings.Split(input.Text(), ":")[0], Message: strings.Split(input.Text(), ":")[1]}
 			fmt.Println(input.Text())
 		}
 	}()
