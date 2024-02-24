@@ -24,11 +24,13 @@ type errMsg error
 var messages = make(chan client.MsgStruct)
 var serverMsg = make(chan client.MsgStruct)
 type serverMessageMsg client.MsgStruct
-var NameClient string = "Morteza"
+var NameClient string = ""
 
 
-func Tui_main(){
-	go client.Startconnection("localhost", 8080, messages , serverMsg)
+func Tui_main(domain string , port int){
+	go client.Startconnection(domain, port, messages , serverMsg)
+	fmt.Println("Enter your name:")
+	fmt.Scan(&NameClient)
 	messages <- client.MsgStruct{Name: NameClient,Message: ""}
 
 	p := tea.NewProgram(initialModel())
