@@ -18,13 +18,16 @@ type model struct{
 	ReciveStyle lipgloss.Style
 	err error
 }
-
 type errMsg error
 
+var messages = make(chan client.MsgStruct)
+var serverMsg = make(chan client.MsgStruct)
+var NameClient string = "Morteza"
+
+
 func Tui_main(){
-	Messages := make(chan<- client.ServerMsg)
-	
-	client.Startconnection("localhost", 8080, Messages)
+	go client.Startconnection("localhost", 8080, messages , serverMsg)
+	messages <- client.MsgStruct{Name: NameClient,Message: ""}
 
 	p := tea.NewProgram(initialModel())
 	if _ , err := p.Run(); err != nil{
@@ -80,25 +83,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 
 
+	
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
-			fmt.Println(m.textarea.Value())
 			return m, tea.Quit
 		case tea.KeyEnter:
+			//send the message to the client.go then that send it to the server
+			//fmt.Println(m.textarea.Value())
+			messages <- client.MsgStruct{Name: NameClient,Message: m.textarea.Value()}
 			m.messages = append(m.messages, m.senderStyle.Render("You: ")+m.textarea.Value())
 			m.viewport.SetContent(strings.Join(m.messages, "\n"))
 			m.textarea.Reset()
 			m.viewport.GotoBottom()
 		}
-	case client.ServerMsg:
-        // Format the server message and add it to the messages
-        serverMessage := m.ReciveStyle.Render(msg.Name + ": ") + msg.Message
-        m.messages = append(m.messages, serverMessage)
-        m.viewport.SetContent(strings.Join(m.messages, "\n"))
-        m.viewport.GotoBottom()
-    
+	// case client.MsgStruct:
+	// 	m.messages = append(m.messages, m.ReciveStyle.Render(msg.Name + ": ")+msg.Message)
+	// 	m.viewport.SetContent(strings.Join(m.messages, "\n"))
+	// 	m.viewport.GotoBottom()
+	// 	return m, nil
+	
 	
 
 
