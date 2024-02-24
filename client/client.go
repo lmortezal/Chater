@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	msg string  
 	Name string
 )
 
@@ -28,12 +27,9 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 	conn_tls, err := tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true} )
 	if err != nil {
 		fmt.Println("Error:", err.Error())
-		//fmt.Println("Line 31")
 		return
 	}
-	//fmt.Printf("connecting to %v\nEnter your name:\n" , addr)
 	
-	// enter name from chan messages
 	get_tui := <-messages
 	fmt.Fprint(conn_tls, get_tui.Name + "\n")
 	
@@ -56,10 +52,8 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 	}()
 
 	
-	//fmt.Scan(&Name)
 	
 	
-	// get message from the Tui(message channel) and send it to the server
 	for {
 		select {
 		case msg := <-messages:

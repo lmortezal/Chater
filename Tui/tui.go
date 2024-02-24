@@ -64,8 +64,8 @@ Type a message and press Enter to send.`)
 		textarea:    ta,
 		messages:    []string{},
 		viewport:    vp,
-		senderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#FFC300")),
-		ReciveStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#001D3D")),
+		senderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#B5179E")),
+		ReciveStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#4361EE")),
 		err:         nil,
 		serverMsg:   serverMsg,
 	}
@@ -105,7 +105,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case tea.KeyEnter:
 			//send the message to the client.go then that send it to the server
-			//fmt.Println(m.textarea.Value())
 			messages <- client.MsgStruct{Name: NameClient,Message: m.textarea.Value()}
 			m.messages = append(m.messages, m.senderStyle.Render("You: ")+m.textarea.Value())
 			m.viewport.SetContent(strings.Join(m.messages, "\n"))
