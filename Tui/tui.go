@@ -17,11 +17,13 @@ type model struct{
 	senderStyle lipgloss.Style
 	ReciveStyle lipgloss.Style
 	err error
+	serverMsg chan client.MsgStruct
 }
 type errMsg error
 
 var messages = make(chan client.MsgStruct)
 var serverMsg = make(chan client.MsgStruct)
+type serverMessageMsg client.MsgStruct
 var NameClient string = "Morteza"
 
 
@@ -63,13 +65,14 @@ Type a message and press Enter to send.`)
 		senderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#FFC300")),
 		ReciveStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#001D3D")),
 		err:         nil,
+		serverMsg:   serverMsg,
 	}
 
 }
 
 
 func (m model) Init() tea.Cmd {
-	return textarea.Blink
+	return tea.Batch(textarea.Blink, listenServerMsg(m.serverMsg))
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -86,6 +89,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	
 
 	switch msg := msg.(type) {
+    case serverMessageMsg:
+        // Format the server message and add it to the messages
+        serverMessage := m.ReciveStyle.Render(msg.Name + ": ") + msg.Message
+        m.messages = append(m.messages, serverMessage)
+        m.viewport.SetContent(strings.Join(m.messages, "\n"))
+        m.viewport.GotoBottom()
+        return m, listenServerMsg(m.serverMsg)
+
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
@@ -99,22 +110,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Reset()
 			m.viewport.GotoBottom()
 		}
-	// case client.MsgStruct:
-	// 	m.messages = append(m.messages, m.ReciveStyle.Render(msg.Name + ": ")+msg.Message)
-	// 	m.viewport.SetContent(strings.Join(m.messages, "\n"))
-	// 	m.viewport.GotoBottom()
-	// 	return m, nil
-	
-	
-
 
 	// We handle errors just like any other message
 	case errMsg:
 		m.err = msg
 		return m, nil
-	}
 
+
+
+	}
 	return m, tea.Batch(tiCmd, vpCmd)
+}
+
+func listenServerMsg(serverMsg chan client.MsgStruct) tea.Cmd {
+    return func() tea.Msg {
+        return serverMessageMsg(<-serverMsg)
+    }
 }
 
 func (m model) View() string {
