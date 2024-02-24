@@ -13,7 +13,7 @@ func main() {
 	if server {
 		s.Startlistening(domain, port)
 	} else if !server{
-		client.Startconnection(domain, port , nil)
+		client.Startconnection(domain, port , nil , nil)
 	} else{
 		panic("Error")
 	}
