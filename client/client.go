@@ -23,7 +23,7 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 	var addr = fmt.Sprintf("%s:%d", domain, port)
 	//TODO // add check connection to the server 
 
-
+	// connect to this socket
 	conn_tls, err := tls.Dial("tcp", addr, &tls.Config{InsecureSkipVerify: true} )
 	if err != nil {
 		fmt.Println("Error:", err.Error())
@@ -33,6 +33,7 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 	get_tui := <-messages
 	fmt.Fprint(conn_tls, get_tui.Name + "\n")
 	
+	// listen for reply and send to the TUI
 	go func() {
 		input := bufio.NewScanner(conn_tls)
 		for input.Scan(){
@@ -51,9 +52,7 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 		}
 	}()
 
-	
-	
-	
+	// send to the server from the TUI
 	for {
 		select {
 		case msg := <-messages:
@@ -61,14 +60,5 @@ func Startconnection(domain string , port int, messages <-chan  MsgStruct , serv
 		}
 	
 	}
-
-	// terminal := bufio.NewScanner(os.Stdin)
-	// //fmt.Println("Enter your message:")
-	// for terminal.Scan(){
-	// 	msg = terminal.Text()
-	// 	fmt.Fprintf(conn_tls, msg + "\n")
-		
-	// }
-	
 }
 	

@@ -53,8 +53,6 @@ func Startlistening(domain string, port int) {
 	// each client send to server give it and print in the server and return to the client
 	defer l_tld.Close()
 
-
-
 	go Boradcast()
 
 	for {
@@ -68,21 +66,20 @@ func Startlistening(domain string, port int) {
 		
 		// Handle connections in a new goroutine.
 		go handleRequest(conn_tld)
-		
-
 	}
-
-
 }
 
 
 // just Boradcast the message to all clients
 func Boradcast(){
-		for msg := range messages {
-			for cli := range clients {
-				fmt.Fprint(cli.Conn , msg + "\n")
-			}
+	for msg := range messages {
+		for cli := range clients {
+			fmt.Fprint(cli.Conn , msg + "\n")
 		}
+	}
+	defer func() {
+		fmt.Println("Boradcast is closed")
+	}()
 }
 
 
