@@ -2,15 +2,15 @@ package server
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
-	"crypto/tls"
 )
 
 var (
 	messages = make(chan string)
-	clients = make(map[Client]bool)
+	clients  = make(map[Client]bool)
 	// messages2 = make(chan allmessages)
 )
 
@@ -25,8 +25,6 @@ type Client struct {
 	Name string
 }
 
-
-
 func Startlistening(domain string, port int) {
 	if domain == "" {
 		domain = "127.0.0.1"
@@ -34,22 +32,22 @@ func Startlistening(domain string, port int) {
 	if port == 0 {
 		port = 8080
 	}
-	cert , errFile_cert := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
-	if errFile_cert != nil{
+	cert, errFile_cert := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
+	if errFile_cert != nil {
 		fmt.Println(errFile_cert.Error())
 	}
 	config_tls := tls.Config{Certificates: []tls.Certificate{cert}}
 
 	var addr = fmt.Sprintf("%s:%d", domain, port)
-	l_tld , err := tls.Listen("tcp4", addr, &config_tls)
+	l_tld, err := tls.Listen("tcp4", addr, &config_tls)
 
 	if err != nil {
 		log.Fatal(err)
-	} else{
+	} else {
 		fmt.Println("Listening on ", addr)
 	}
 
-	// Close the listener when the application closes. and handle the error 
+	// Close the listener when the application closes. and handle the error
 	// each client send to server give it and print in the server and return to the client
 	defer l_tld.Close()
 
@@ -59,22 +57,21 @@ func Startlistening(domain string, port int) {
 		// Listen for an incoming connection.
 		//conn, err := l.Accept()
 		conn_tld, err2 := l_tld.Accept()
-		if (err2 != nil) || (err != nil){
+		if (err2 != nil) || (err != nil) {
 			log.Fatal(err2)
 			log.Fatal(err)
 		}
-		
+
 		// Handle connections in a new goroutine.
 		go handleRequest(conn_tld)
 	}
 }
 
-
 // just Boradcast the message to all clients
-func Boradcast(){
+func Boradcast() {
 	for msg := range messages {
 		for cli := range clients {
-			fmt.Fprint(cli.Conn , msg + "\n")
+			fmt.Fprint(cli.Conn, msg+"\n")
 		}
 	}
 	defer func() {
@@ -82,18 +79,17 @@ func Boradcast(){
 	}()
 }
 
-
 // Handles incoming requests.
 func handleRequest(conn net.Conn) {
 	input := bufio.NewScanner(conn)
 	fmt.Println("New connection from:", conn.RemoteAddr())
 	var name string
-	for input.Scan(){
+	for input.Scan() {
 		name = input.Text()
 		messages <- name + " has joined"
 		break
 	}
-	
+
 	cli := Client{conn, name}
 	clients[cli] = true
 
@@ -101,11 +97,11 @@ func handleRequest(conn net.Conn) {
 		delete(clients, cli)
 		messages <- name + " has left"
 		conn.Close()
-	
+
 	}()
 
-	for input.Scan(){
-		if input.Text() == ""{
+	for input.Scan() {
+		if input.Text() == "" {
 			continue
 		}
 		messages <- name + ":" + input.Text()

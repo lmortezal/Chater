@@ -8,38 +8,40 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/lmortezal/Chater/client"
+	"github.com/lmortezal/Chater/internal/client"
 )
-type model struct{
-	viewport viewport.Model
-	messages []string
-	textarea textarea.Model
+
+type model struct {
+	viewport    viewport.Model
+	messages    []string
+	textarea    textarea.Model
 	senderStyle lipgloss.Style
 	ReciveStyle lipgloss.Style
-	err error
-	serverMsg chan client.MsgStruct
+	err         error
+	serverMsg   chan client.MsgStruct
 }
 type errMsg error
 
 var messages = make(chan client.MsgStruct)
 var serverMsg = make(chan client.MsgStruct)
+
 type serverMessageMsg client.MsgStruct
+
 var NameClient string = ""
 
-
-func Tui_main(domain string , port int){
-	go client.Startconnection(domain, port, messages , serverMsg)
+func Tui_main(domain string, port int) {
+	go client.Startconnection(domain, port, messages, serverMsg)
 	fmt.Println("Enter your name:")
 	fmt.Scan(&NameClient)
-	messages <- client.MsgStruct{Name: NameClient,Message: ""}
+	messages <- client.MsgStruct{Name: NameClient, Message: ""}
 
 	p := tea.NewProgram(initialModel())
-	if _ , err := p.Run(); err != nil{
+	if _, err := p.Run(); err != nil {
 		panic(err)
 	}
 }
 
-func initialModel() model{
+func initialModel() model {
 	ta := textarea.New()
 	ta.Placeholder = "Type a message and hit enter to send"
 	ta.Focus()
@@ -72,7 +74,6 @@ Type a message and press Enter to send.`)
 
 }
 
-
 func (m model) Init() tea.Cmd {
 	return tea.Batch(textarea.Blink, listenServerMsg(m.serverMsg))
 }
@@ -86,18 +87,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.textarea, tiCmd = m.textarea.Update(msg)
 	m.viewport, vpCmd = m.viewport.Update(msg)
 
-
-
-	
-
 	switch msg := msg.(type) {
-    case serverMessageMsg:
-        // Format the server message and add it to the messages
-        serverMessage := m.ReciveStyle.Render(msg.Name + ": ") + msg.Message
-        m.messages = append(m.messages, serverMessage)
-        m.viewport.SetContent(strings.Join(m.messages, "\n"))
-        m.viewport.GotoBottom()
-        return m, listenServerMsg(m.serverMsg)
+	case serverMessageMsg:
+		// Format the server message and add it to the messages
+		serverMessage := m.ReciveStyle.Render(msg.Name+": ") + msg.Message
+		m.messages = append(m.messages, serverMessage)
+		m.viewport.SetContent(strings.Join(m.messages, "\n"))
+		m.viewport.GotoBottom()
+		return m, listenServerMsg(m.serverMsg)
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -105,7 +102,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case tea.KeyEnter:
 			//send the message to the client.go then that send it to the server
-			messages <- client.MsgStruct{Name: NameClient,Message: m.textarea.Value()}
+			messages <- client.MsgStruct{Name: NameClient, Message: m.textarea.Value()}
 			m.messages = append(m.messages, m.senderStyle.Render("You: ")+m.textarea.Value())
 			m.viewport.SetContent(strings.Join(m.messages, "\n"))
 			m.textarea.Reset()
@@ -117,16 +114,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = msg
 		return m, nil
 
-
-
 	}
 	return m, tea.Batch(tiCmd, vpCmd)
 }
 
 func listenServerMsg(serverMsg chan client.MsgStruct) tea.Cmd {
-    return func() tea.Msg {
-        return serverMessageMsg(<-serverMsg)
-    }
+	return func() tea.Msg {
+		return serverMessageMsg(<-serverMsg)
+	}
 }
 
 func (m model) View() string {
