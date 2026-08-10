@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 )
 
 var (
 	messages = make(chan string)
 	clients  = make(map[Client]bool)
 	// messages2 = make(chan allmessages)
+	mu sync.RWMutex
 )
 
 // TODO  // create a struct for the messages to filter dublicate message
@@ -25,16 +27,17 @@ type Client struct {
 	Name string
 }
 
-func Startlistening(domain string, port int) {
+func Startlistening(domain string, port int) error {
 	if domain == "" {
 		domain = "127.0.0.1"
 	}
 	if port == 0 {
 		port = 8080
 	}
-	cert, errFile_cert := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
-	if errFile_cert != nil {
-		fmt.Println(errFile_cert.Error())
+	cert, err := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
 	}
 	config_tls := tls.Config{Certificates: []tls.Certificate{cert}}
 
@@ -43,6 +46,7 @@ func Startlistening(domain string, port int) {
 
 	if err != nil {
 		log.Fatal(err)
+		return err
 	} else {
 		fmt.Println("Listening on ", addr)
 	}
@@ -56,10 +60,10 @@ func Startlistening(domain string, port int) {
 	for {
 		// Listen for an incoming connection.
 		//conn, err := l.Accept()
-		conn_tld, err2 := l_tld.Accept()
-		if (err2 != nil) || (err != nil) {
-			log.Fatal(err2)
-			log.Fatal(err)
+		conn_tld, err := l_tld.Accept()
+		if err != nil {
+			log.Printf("Accept error: %v", err)
+			continue
 		}
 
 		// Handle connections in a new goroutine.
@@ -70,9 +74,11 @@ func Startlistening(domain string, port int) {
 // just Boradcast the message to all clients
 func Boradcast() {
 	for msg := range messages {
+		mu.RLock()
 		for cli := range clients {
 			fmt.Fprint(cli.Conn, msg+"\n")
 		}
+		mu.RUnlock()
 	}
 	defer func() {
 		fmt.Println("Boradcast is closed")
@@ -91,10 +97,14 @@ func handleRequest(conn net.Conn) {
 	}
 
 	cli := Client{conn, name}
+	mu.Lock()
 	clients[cli] = true
+	mu.Unlock()
 
 	defer func() {
+		mu.Lock()
 		delete(clients, cli)
+		mu.Unlock()
 		messages <- name + " has left"
 		conn.Close()
 
